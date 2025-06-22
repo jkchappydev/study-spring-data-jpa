@@ -5,6 +5,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 
+import javax.swing.text.html.Option;
+import java.util.List;
+import java.util.Optional;
+
 @Repository // 해당 어노테이션 반드시 작성
 public class MemberJpaRepository {
 
@@ -16,7 +20,27 @@ public class MemberJpaRepository {
          return member;
     }
 
-    public Member findById(Long id) {
+    public void delete(Member member) {
+        em.remove(member);
+    }
+
+    public List<Member> findAll() {
+        return em.createQuery("select m from Member m", Member.class)
+                .getResultList();
+    }
+
+    public Optional<Member> findById(Long id) {
+        Member member = em.find(Member.class, id);
+        return Optional.ofNullable(member);
+    }
+
+    public Long count() {
+        return em.createQuery("select count(m) from Member m", Long.class)
+                .getSingleResult();
+    }
+
+    // 단건조회
+    public Member find(Long id) {
         return em.find(Member.class, id);
     }
 
