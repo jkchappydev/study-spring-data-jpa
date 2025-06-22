@@ -1,30 +1,43 @@
 package com.studyspringdatajpa.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString(of = {"id", "username", "age"}) // 연관관계 필드("team")은 무한루프 발생 가능성, 또는 @ToString(exclude = "team")
 public class Member {
 
     @Id
     @GeneratedValue
+    @Column(name = "member_id")
     private Long id;
+
     private String username;
 
-    protected Member() { // JPA 표준 스펙에 기본 생성자 반드시 한개 생성 (단, private는 안됨)
-    }
+    private int age;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id")
+    private Team team;
 
     public Member(String username) {
         this.username = username;
     }
 
-    public void changeUsername(String username) {
+    public Member(String username, int age, Team team) {
         this.username = username;
+        this.age = age;
+        if(team != null) {
+            changeTeam(team);
+        }
+    }
+
+    public void changeTeam(Team team) {
+        this.team = team;
+        team.getMembers().add(this);
     }
 
 }
