@@ -3,6 +3,8 @@ package com.studyspringdatajpa.repository;
 import com.studyspringdatajpa.dto.MemberDto;
 import com.studyspringdatajpa.entity.Member;
 import com.studyspringdatajpa.entity.Team;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,8 @@ class MemberRepositoryTest {
 
     @Autowired MemberRepository memberRepository;
     @Autowired TeamRepository teamRepository;
+    @PersistenceContext
+    EntityManager em;
 
     @Test
     public void testMember() {
@@ -232,6 +236,29 @@ class MemberRepositoryTest {
 
         // ==== List<Member> ====
         // 페이징 관련 메서드 제공 안함
+    }
+
+    @Test
+    public void bulkUpdate() {
+        // given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 19));
+        memberRepository.save(new Member("member3", 20));
+        memberRepository.save(new Member("member4", 21));
+        memberRepository.save(new Member("member5", 40));
+
+        // when
+        int resultCount = memberRepository.bulkAgePlus(20);
+
+        // em.flush(); // 영속성 컨텍스트에 남아 있던 내용 DB 반영
+        // em.clear(); // 영속성 컨텍스트 비움
+
+        List<Member> result = memberRepository.findByUsername("member5");
+        Member findMember = result.get(0);
+        System.out.println("findMember = " + findMember);
+
+        // then
+        Assertions.assertThat(resultCount).isEqualTo(3);
     }
 
 }

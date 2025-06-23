@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -80,4 +81,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     // 기타
     // Page<Member> findTop3ByAge(int age); // Top3: 단순히 3건만 가져오고 싶다. Pageable 안 넘겨도 됨.
+
+    // ==== 벌크성 수정 쿼리 ====
+    @Modifying(clearAutomatically = true) // 해당 어노테이션 작성 필수 (있어야 executeUpdate() 호출)
+    @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
+    int bulkAgePlus(@Param("age") int age);
+
 }
