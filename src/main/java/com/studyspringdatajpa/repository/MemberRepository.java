@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
@@ -49,4 +50,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // IN 절 조회할 때 사용
     @Query("select m from Member m where m.username in :names")
     List<Member> findByNames(@Param("names") Collection<String> names);
+
+    // ==== 반환 타입 ====
+    List<Member> findListByUsername(String username); // 컬렉션 (결과가 없으면 null이 아닌 Empty Collection을 반환함)
+    Member findMemberByUsername(String username); // 단건 (결과가 없으면 null을 반환)
+    Optional<Member> findOptionalByUsername(String username); // 단건 Optional (데이터가 있을지 없을지 모를때 해당 리턴타입 사용)
+
 }

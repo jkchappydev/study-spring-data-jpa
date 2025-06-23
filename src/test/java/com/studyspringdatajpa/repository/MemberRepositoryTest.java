@@ -150,4 +150,19 @@ class MemberRepositoryTest {
         }
     }
 
+    @Test
+    public void testReturnType() {
+        Member member1 = new Member("AAA", 10);
+        Member member2 = new Member("BBB", 20);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        List<Member> aaa = memberRepository.findListByUsername("AAA");
+        System.out.println("aaa = " + aaa);
+        Member bbb = memberRepository.findMemberByUsername("BBB");
+        System.out.println("bbb = " + bbb);
+        Optional<Member> member = memberRepository.findOptionalByUsername("AAA");
+        System.out.println("member = " + member);
+    }
+
 }
