@@ -2,6 +2,9 @@ package com.studyspringdatajpa.repository;
 
 import com.studyspringdatajpa.dto.MemberDto;
 import com.studyspringdatajpa.entity.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -56,4 +59,25 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Member findMemberByUsername(String username); // 단건 (결과가 없으면 null을 반환)
     Optional<Member> findOptionalByUsername(String username); // 단건 Optional (데이터가 있을지 없을지 모를때 해당 리턴타입 사용)
 
+    // ==== 스프링 데이터 JPA 페이징과 정렬 ====
+//    Page<Member> findByAge(int age, Pageable pageable); // 쿼리 메서드
+
+    // 슬라이스는 전체 데이터 수, 전체 페이지 개수 없다.
+    // limit + 1 한다. (더보기 같은 메뉴)
+//    Slice<Member> findByAge(int age, Pageable pageable); // 쿼리 메서드
+
+    // 리스트는 딱 해당 페이지의 데이터만 출력하고 끝낸다. (기타 페이징 관련 메서드 제공 안함)
+//    List<Member> findByAge(int age, Pageable pageable);
+
+    // 카운트 쿼리 (실무에서 중요)
+    // 따로 분리 이유. 원래 쿼리가 left join 이어도 count 쿼리는 left join 할 필요가 없기 때문에 (총 토탈 건수는 같기 때문)
+    // @Query(value = "select m from Member m left join m.team t") // 이 방식은 count 쿼리도 left join을 하기 때문에 데이터가 많아지면 성능이 안 좋아진다.
+    @Query(
+            value = "select m from Member m left join m.team t where m.age = :age",
+            countQuery = "select count(m.username) from Member m where m.age = :age"
+    ) // 이렇게 따로 분리를 할 수 있다.
+    Page<Member> findByAge(@Param("age") int age, Pageable pageable);
+
+    // 기타
+    // Page<Member> findTop3ByAge(int age); // Top3: 단순히 3건만 가져오고 싶다. Pageable 안 넘겨도 됨.
 }

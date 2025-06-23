@@ -7,6 +7,10 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -163,6 +167,71 @@ class MemberRepositoryTest {
         System.out.println("bbb = " + bbb);
         Optional<Member> member = memberRepository.findOptionalByUsername("AAA");
         System.out.println("member = " + member);
+    }
+
+    @Test
+    public void testPaging() {
+        // given
+        Team team1 = new Team("teamA");
+        teamRepository.save(team1);
+        Team team2 = new Team("teamB");
+        teamRepository.save(team2);
+
+        Member member1 = new Member("member1", 10);
+        member1.changeTeam(team1);
+        memberRepository.save(member1);
+
+        Member member2 = new Member("member2", 10);
+        member2.changeTeam(team1);
+        memberRepository.save(member2);
+
+        Member member3 = new Member("member3", 10);
+        member3.changeTeam(team1);
+        memberRepository.save(member3);
+
+        Member member4 = new Member("member4", 10);
+        member4.changeTeam(team2);
+        memberRepository.save(member4);
+
+        Member member5 = new Member("member5", 10);
+        member5.changeTeam(team2);
+        memberRepository.save(member5);
+
+        int age = 10;
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+        // when
+        Page<Member> page = memberRepository.findByAge(age, pageRequest);
+        // 반드시 DTO로 변환해서 넘겨야함 (toMap는 외부로 넘겨도 된다.)
+        Page<MemberDto> toMap = page.map(member -> new MemberDto(member.getId(), member.getUsername(), null));
+
+//        Slice<Member> pageSlice = memberRepository.findByAge(age, pageRequest);
+//        List<Member> pageList = memberRepository.findByAge(age, pageRequest);
+
+        // then
+        // ==== Page<Member> ====
+        List<Member> content = page.getContent();
+        for (Member member : content) {
+            System.out.println("member.team = " + member.getTeam().getName());
+        }
+
+        assertThat(content.size()).isEqualTo(3); // 현재 페이지의 콘텐츠 개수
+        assertThat(page.getTotalElements()).isEqualTo(5); // 전체 데이터 수
+        assertThat(page.getNumber()).isEqualTo(0); // 현재 페이지 번호
+        assertThat(page.getTotalPages()).isEqualTo(2); // 전체 페이지 개수
+        assertThat(page.isFirst()).isTrue(); // 현재 페이지가 첫번째 페이지인지
+        assertThat(page.hasNext()).isTrue(); // 현재 페이지의 다음 페이지가 있는지
+
+        // ==== Slice<Member> ====
+//        List<Member> contentSlice = pageSlice.getContent();
+//
+//        assertThat(contentSlice.size()).isEqualTo(3); // 현재 페이지의 콘텐츠 개수
+//        assertThat(pageSlice.getNumber()).isEqualTo(0); // 현재 페이지 번호
+//        assertThat(pageSlice.isFirst()).isTrue(); // 현재 페이지가 첫번째 페이지인지
+//        assertThat(pageSlice.hasNext()).isTrue(); // 현재 페이지의 다음 페이지가 있는지
+
+        // ==== List<Member> ====
+        // 페이징 관련 메서드 제공 안함
     }
 
 }
