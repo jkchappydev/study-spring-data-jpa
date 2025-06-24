@@ -5,6 +5,7 @@ import com.studyspringdatajpa.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -87,4 +88,27 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
 
+    // @EntityGraph
+    /* 기본 패치 조인
+        @Query("select m from Member m left join fetch m.team")
+        List<Member> findMemberFetchJoin();
+    */
+
+    // Spring Data JPA에서 패치 조인
+    @Override
+    @EntityGraph(attributePaths = {"team"}) // 패치 조인 할 대상을 명시
+    List<Member> findAll();
+
+    // 반드시 직접 쿼리를 작성해야하는 상황에서 패치 조인만 적용하고 싶을 때
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph();
+
+    // 쿼리 메서드도 가능하다.
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
+
+    // NamedQuery도 가능
+    @EntityGraph("Member.all")
+    List<Member> findNamedQueryEntityGraphByUsername(@Param("username") String username);
 }

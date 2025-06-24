@@ -261,4 +261,38 @@ class MemberRepositoryTest {
         Assertions.assertThat(resultCount).isEqualTo(3);
     }
 
+    @Test
+    public void findMemberLazy() {
+        // given
+        Team team1 = new Team("teamA");
+        teamRepository.save(team1);
+
+        // member1 -> teamA
+        Member member1 = new Member("member1", 10);
+        member1.changeTeam(team1);
+        memberRepository.save(member1);
+
+        // member2 -> teamB
+        Team team2 = new Team("teamB");
+        teamRepository.save(team2);
+
+        Member member2 = new Member("member1", 20);
+        member2.changeTeam(team2);
+        memberRepository.save(member2);
+
+        em.flush();
+        em.clear();
+
+        // when
+//        List<Member> members = memberRepository.findAll();
+//        List<Member> members = memberRepository.findMemberFetchJoin();
+//        List<Member> members = memberRepository.findEntityGraphByUsername("member1");
+        List<Member> members = memberRepository.findNamedQueryEntityGraphByUsername("member1");
+
+        for (Member member : members) {
+            System.out.println("member = " + member.getUsername());
+            System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+        }
+    }
+
 }
