@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
@@ -293,6 +292,59 @@ class MemberRepositoryTest {
             System.out.println("member = " + member.getUsername());
             System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
         }
+    }
+
+    @Test
+    public void beforeQueryHint() {
+        // given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
+
+        // when
+        Member findMember = memberRepository.findById(member1.getId()).get(); // 다시 DB에서 조회
+        findMember.setUsername("member2");
+        // JPA는 변경 감지를 위해 원본과 변경된 객체를 비교한다.
+        // 즉, 내부적으로 member1(저장 시점 상태)과 findMember(변경된 객체) 둘을 비교하여 UPDATE 쿼리를 생성함.
+        // 이로 인해 불필요한 스냅샷 유지 비용이 발생할 수 있다.
+
+        // 하지만, 만약 이 객체가 단순히 '조회 목적'이라면? (즉, 수정할 필요가 없는 경우)
+        // 원본과 비교할 필요가 없기 때문에 스냅샷을 보관할 이유가 없다.
+        // 이런 경우에는 JPA가 제공하는 '읽기 전용 힌트(Read-only Hint)'를 사용하면 성능을 최적화할 수 있다.
+        // -> Hibernate 구현체에서는 @QueryHints({ @QueryHint(name = "org.hibernate.readOnly", value = "true") }) 사용 가능
+
+        em.flush();  // 변경 감지로 인해 UPDATE 쿼리가 나감 (readOnly가 아니기 때문)
+    }
+
+    @Test
+    public void queryHintReadOnly() {
+        // given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
+
+        // when
+        Member findMember = memberRepository.findReadOnlyByUsername("member1");
+        findMember.setUsername("member2");
+
+        // findReadOnlyByUsername()는 Hibernate에 readOnly 힌트를 전달했기 때문에,
+        // Hibernate는 해당 엔티티에 대해 스냅샷을 만들지 않음.
+        // 따라서 변경 감지가 동작하지 않고, flush 시에도 Update 쿼리가 실행되지 않는다.
+        em.flush();
+    }
+
+    @Test
+    public void lock() {
+        // given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
+
+        // when
+        List<Member> findMember = memberRepository.findLockByUsername("member1");
     }
 
 }
