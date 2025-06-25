@@ -1,8 +1,11 @@
 package com.studyspringdatajpa.dto;
 
+import com.studyspringdatajpa.entity.Member;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class MemberDto {
 
     private Long id;
@@ -13,6 +16,11 @@ public class MemberDto {
         this.id = id;
         this.username = username;
         this.teamName = teamName;
+    }
+
+    public MemberDto(Member member) {
+        this.id = member.getId();
+        this.username = member.getUsername();
     }
 
 }
