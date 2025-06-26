@@ -9,9 +9,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
@@ -373,4 +371,41 @@ class MemberRepositoryTest {
 
         assertThat(result.size()).isEqualTo(1);
     }
+
+    @Test
+    public void queryByExample() {
+        // given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member m1 = new Member("m1", 0, teamA);
+        Member m2 = new Member("m2", 1, teamA);
+        em.persist(m1);
+        em.persist(m2);
+
+        em.flush();
+        em.clear();
+
+        // when
+        // -- Probe --
+        Member member = new Member("m1"); // Member 엔티티 자체가 검색 조건이 됨
+        Team team = new Team("teamA");
+        member.changeTeam(team);
+        // ----
+
+        // age 무시
+        ExampleMatcher matcher = ExampleMatcher.matching()
+                .withIgnorePaths("age");
+
+        Example<Member> example = Example.of(member, matcher);
+
+        List<Member> result = memberRepository.findAll(example);
+        // 조회할 때 null인 값은 무시하고 조건으로 넣지 않는다.
+        // 그런데 실제 쿼리에서 where m1_0.username='m1' and m1_0.age=0; 으로 되어있다.
+        // 왜 age=0이 자동으로 나오나면, age는 int 타입이라 (자바 기본타입) null이 아니고 0이라서 무시되지 않는다.
+        // 따라서, age를 무시해야한다.
+
+        assertThat(result.get(0).getUsername()).isEqualTo("m1");
+    }
+
 }
