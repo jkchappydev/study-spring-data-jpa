@@ -128,4 +128,16 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
     // 동적 Projections + 중첩 구조 처리
     <T> List<T> findProjections2ByUsername(@Param("username") String username, Class<T> tClass);
 
+    // Native Query (한계가 많아서 잘 안씀)
+    // @Query(value = "select * from member where username = :username", nativeQuery = true)
+    // List<Member> findByNativeQuery(@Param("username") String username);
+
+    @Query(value = "select * from member where username = ?", nativeQuery = true)
+    List<Member> findByNativeQuery(String username);
+
+    @Query(value = "select m.member_id as id, m.username, t.name as teamName from Member m left join Team t on m.team_id = t.team_id",
+            countQuery = "select count(*) from member", // 네이티브 쿼리는 카운트 쿼리 별도 작성해야한다.
+            nativeQuery = true)
+    Page<MemberProjection> findByNativeProjection(Pageable pageable);
+
 }

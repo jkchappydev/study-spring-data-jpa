@@ -24,7 +24,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 // Spring Data JPA 기반 테스트
 @SpringBootTest
 @Transactional
-@Rollback(true)
+@Rollback(value = false)
 @ActiveProfiles("local")
 class MemberRepositoryTest {
 
@@ -457,4 +457,46 @@ class MemberRepositoryTest {
         }
     }
 
+    @Test
+    public void nativeQuery() {
+        // given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member m1 = new Member("m1", 0, teamA);
+        Member m2 = new Member("m2", 0, teamA);
+        em.persist(m1);
+        em.persist(m2);
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<Member> result = memberRepository.findByNativeQuery("m1");
+        for (Member member : result) {
+            System.out.println("member = " + member.getUsername());
+        }
+    }
+
+    @Test
+    public void nativeQueryProjection() {
+        // given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member m1 = new Member("m1", 0, teamA);
+        Member m2 = new Member("m2", 0, teamA);
+        em.persist(m1);
+        em.persist(m2);
+
+        em.flush();
+        em.clear();
+
+        // when
+        Page<MemberProjection> result = memberRepository.findByNativeProjection(PageRequest.of(0, 10));
+        for (MemberProjection member : result) {
+            System.out.println("member = " + member.getUsername());
+            System.out.println("member.getTeamName() = " + member.getTeamName());
+        }
+    }
 }
