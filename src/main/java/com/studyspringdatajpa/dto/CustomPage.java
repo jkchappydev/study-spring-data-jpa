@@ -15,11 +15,11 @@ public class CustomPage<T> {
     // 따라서 제네릭 타입 <T>를 사용해 유연하게 처리합니다.
     // 예: List<User>, List<Board> 등 상황에 따라 유연하게 대응 가능
     private List<T> content;
-    private CommonPageResponse pageInfo;
+    private CustomPageResponse pageInfo;
 
     public CustomPage(List<T> content, Pageable pageable, long total) {
         this.content = content;
-        this.pageInfo = new CommonPageResponse(new PageImpl(content, pageable, total));
+        this.pageInfo = new CustomPageResponse(new PageImpl(content, pageable, total));
     }
 
 }

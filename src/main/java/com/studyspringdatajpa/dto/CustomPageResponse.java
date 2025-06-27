@@ -4,7 +4,7 @@ import lombok.Getter;
 import org.springframework.data.domain.*;
 
 @Getter
-public class CommonPageResponse {
+public class CustomPageResponse {
 
     private boolean first;
     private boolean last;
@@ -14,20 +14,12 @@ public class CommonPageResponse {
     private int page;
     private int size;
 
-    public CommonPageResponse(PageImpl page) {
+    public CustomPageResponse(PageImpl page) {
         this.first = page.isFirst();
         this.last = page.isLast();
         this.hasNext = page.hasNext();
         this.totalPages = page.getTotalPages();
         this.totalElements = page.getTotalElements();
-        this.page = page.getNumber() + 1;
-        this.size = page.getSize();
-    }
-
-    public CommonPageResponse(SliceImpl page) {
-        this.first = page.isFirst();
-        this.last = page.isLast();
-        this.hasNext = page.hasNext();
         this.page = page.getNumber() + 1;
         this.size = page.getSize();
     }
